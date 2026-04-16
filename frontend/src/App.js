@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 // Customer pages
@@ -48,7 +48,7 @@ const AdminRoute = ({ children }) => {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
@@ -82,6 +82,6 @@ export default function App() {
         <Route path="/admin/refunds" element={<AdminRoute><AdminRefunds /></AdminRoute>} />
         <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

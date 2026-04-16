@@ -25,7 +25,8 @@ api.interceptors.response.use(
           return api(original);
         } catch {
           localStorage.clear();
-          window.location.href = '/login';
+          const base = process.env.PUBLIC_URL || '';
+          window.location.href = `${base}/#/login`;
         }
       }
     }

@@ -1,6 +1,7 @@
 {
   "name": "clothstore-frontend",
   "version": "1.0.0",
+  "homepage": "https://devarajan241981.github.io/Ecommerce-online-shopping-webapp/",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",

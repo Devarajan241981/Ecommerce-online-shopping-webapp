@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginAdmin } from '../../store/slices/authSlice';
 import toast from 'react-hot-toast';
@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
           <p style={{ color: '#475569', fontSize: 13, textAlign: 'center', marginTop: 24 }}>
-            Customer? <a href="/login" style={{ color: '#a5b4fc', fontWeight: 600, textDecoration: 'none' }}>Go to Customer Login</a>
+            Customer? <Link to="/login" style={{ color: '#a5b4fc', fontWeight: 600, textDecoration: 'none' }}>Go to Customer Login</Link>
           </p>
         </div>
 

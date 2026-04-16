@@ -80,3 +80,13 @@ Do not commit secrets. Use `backend/.env.example` as a template.
 - Static files: WhiteNoise is enabled; run `python manage.py collectstatic` during build.
 - Frontend: build with `npm run build` and deploy on Vercel/Netlify (or host the build output on your server/CDN).
 
+## Deploy with GitHub (Frontend on GitHub Pages)
+
+This repo includes a GitHub Actions workflow that builds the React app and deploys it to **GitHub Pages** on every push to `main`.
+
+1. In your GitHub repo: **Settings → Pages → Build and deployment → Source = GitHub Actions**
+2. Add a repo variable: **Settings → Secrets and variables → Actions → Variables**
+   - `REACT_APP_API_URL` = your backend API URL (example: `https://your-backend.com/api`)
+3. Push to `main` (or run the workflow manually from the Actions tab).
+
+Note: GitHub Pages hosts only the frontend. Deploy the Django backend on a server platform (Render/Railway/Fly.io/etc) and point `REACT_APP_API_URL` to it.
