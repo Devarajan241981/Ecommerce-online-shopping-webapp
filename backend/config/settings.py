@@ -4,15 +4,17 @@ from pathlib import Path
 try:
     import environ
     BASE_DIR = Path(__file__).resolve().parent.parent
+    ENV = environ.Env()
     # read backend/.env if present
     env_path = BASE_DIR / '.env'
     if env_path.exists():
         # Ensure local .env wins over any pre-set shell environment variables
         # (e.g. DEBUG=release) so dev settings behave consistently.
-        environ.Env.read_env(str(env_path), overwrite=True)
+        ENV.read_env(str(env_path), overwrite=True)
 except Exception:
     # If django-environ isn't available or reading fails, fall back to os.environ
     BASE_DIR = Path(__file__).resolve().parent.parent
+    ENV = None
 from datetime import timedelta
 
 # BASE_DIR is set above (either in try or except)
@@ -25,7 +27,7 @@ def _env_truthy(name: str, default: bool = False) -> bool:
         return default
     return str(raw).strip().lower() in {'1', 'true', 't', 'yes', 'y', 'on'}
 
-DEBUG = _env_truthy('DEBUG', True)
+DEBUG = (ENV.bool('DEBUG', default=False) if ENV is not None else _env_truthy('DEBUG', False))
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
 INSTALLED_APPS = [
@@ -83,12 +85,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if ENV is not None:
+    _sqlite_default = f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
+    DATABASES = {'default': ENV.db('DATABASE_URL', default=_sqlite_default)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -137,10 +143,15 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+if ENV is not None:
+    _default_cors = ['http://localhost:3000', 'http://127.0.0.1:3000']
+    CORS_ALLOWED_ORIGINS = ENV.list('CORS_ALLOWED_ORIGINS', default=_default_cors)
+    CSRF_TRUSTED_ORIGINS = ENV.list('CSRF_TRUSTED_ORIGINS', default=[])
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 CORS_ALLOW_CREDENTIALS = True
 
 # Razorpay
@@ -152,7 +163,7 @@ TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
 
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = (ENV.str('FRONTEND_URL', default='http://localhost:3000') if ENV is not None else os.environ.get('FRONTEND_URL', 'http://localhost:3000'))
 
 # Comma-separated list of phone numbers (E.164 or local) that are allowed to repeatedly
 # re-register / request OTP during development. Example: TEST_PHONE_NUMBERS=+19995551234,9663397727
