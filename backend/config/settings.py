@@ -16,6 +16,7 @@ except Exception:
     BASE_DIR = Path(__file__).resolve().parent.parent
     ENV = None
 from datetime import timedelta
+import dj_database_url
 
 # BASE_DIR is set above (either in try or except)
 
@@ -85,16 +86,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+_sqlite_default = f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
+
+# DATABASE configuration: prefer DATABASE_URL (Postgres) falling back to local sqlite
+DATABASE_URL = None
 if ENV is not None:
-    _sqlite_default = f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
-    DATABASES = {'default': ENV.db('DATABASE_URL', default=_sqlite_default)}
+    DATABASE_URL = ENV.str('DATABASE_URL', default=_sqlite_default)
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    DATABASE_URL = os.environ.get('DATABASE_URL', _sqlite_default)
+
+# Parse DATABASE_URL with dj-database-url for robust production-ready config
+DATABASES = {
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=('postgres' in DATABASE_URL))
+}
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -118,6 +122,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Security and production settings
+SECURE_SSL_REDIRECT = (ENV.bool('SECURE_SSL_REDIRECT', default=not DEBUG) if ENV is not None else _env_truthy('SECURE_SSL_REDIRECT', not DEBUG))
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 3600))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_truthy('SECURE_HSTS_INCLUDE_SUBDOMAINS', True)
+SECURE_HSTS_PRELOAD = _env_truthy('SECURE_HSTS_PRELOAD', True)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -154,6 +166,18 @@ else:
     ]
 CORS_ALLOW_CREDENTIALS = True
 
+# Ensure FRONTEND_URL (if provided via env) is allowed for CORS
+try:
+    if ENV is not None:
+        frontend_origin = ENV.str('FRONTEND_URL', default=None)
+    else:
+        frontend_origin = os.environ.get('FRONTEND_URL')
+    if frontend_origin:
+        frontend_origin = frontend_origin.rstrip('/')
+        if frontend_origin not in CORS_ALLOWED_ORIGINS:
+            CORS_ALLOWED_ORIGINS.append(frontend_origin)
+except Exception:
+    pass
 # Razorpay
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
