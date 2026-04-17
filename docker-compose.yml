@@ -12,6 +12,20 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  web:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - backend/.env.local
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
 
   # Optional: pgadmin for DB browser (uncomment if you need GUI)
   # pgadmin:

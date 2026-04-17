@@ -1,16 +1,17 @@
 Local Postgres (Docker) — quick start
 
-1. Start Postgres with Docker Compose
+
+1. Start Postgres + Django with Docker Compose
 
 ```bash
 cd /Users/rachithak/Downloads/clothstore_project
-docker compose up -d db
+# Start both db and web services (builds backend image if needed)
+docker compose up -d
 ```
 
-This will start a Postgres instance on `127.0.0.1:5432` with:
-- user: postgres
-- password: clothbrand
-- db: postgres
+This will start:
+- Postgres on `127.0.0.1:5432` (user=postgres, password=clothbrand, db=postgres)
+- Django development server on `127.0.0.1:8000`
 
 2. Configure backend env
 
@@ -21,19 +22,17 @@ cp backend/.env.local.example backend/.env.local
 # Edit backend/.env.local if you need to change credentials
 ```
 
-3. Run migrations & collectstatic
+3. (If needed) View logs, run migrations manually or interact with the container
 
-Activate your venv and install requirements if not already done:
+Run migrations / collectstatic manually inside the container:
 
 ```bash
-cd backend
-source ../venv311/bin/activate
-pip install -r requirements.txt
-
-export $(cat .env.local | xargs)
+# open a shell to the web container
+docker compose exec web sh
+# inside container
 python manage.py migrate
 python manage.py collectstatic --noinput
-python manage.py runserver 127.0.0.1:8000
+exit
 ```
 
 4. Frontend
@@ -48,3 +47,4 @@ REACT_APP_API_URL=http://127.0.0.1:8000 npm start
 Notes
 - If Postgres is already running locally on 5432, stop it or change the `docker-compose.yml` port mapping.
 - For production, use a managed Postgres (Neon/AWS RDS) and set `DATABASE_URL` accordingly in your hosting environment.
+
