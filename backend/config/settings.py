@@ -8,9 +8,10 @@ try:
     # read backend/.env if present
     env_path = BASE_DIR / '.env'
     if env_path.exists():
-        # Ensure local .env wins over any pre-set shell environment variables
-        # (e.g. DEBUG=release) so dev settings behave consistently.
-        ENV.read_env(str(env_path), overwrite=True)
+        # Load local .env but do NOT overwrite existing process environment
+        # variables (for example those provided by Docker env_file) so
+        # container/service env vars take precedence.
+        ENV.read_env(str(env_path), overwrite=False)
 except Exception:
     # If django-environ isn't available or reading fails, fall back to os.environ
     BASE_DIR = Path(__file__).resolve().parent.parent
