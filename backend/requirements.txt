@@ -10,3 +10,5 @@ django-filter==23.3
 twilio==8.10.0
 gunicorn==21.2.0
 whitenoise==6.6.0
+django-cloudinary-storage
+cloudinary

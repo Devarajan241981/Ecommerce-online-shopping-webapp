@@ -117,6 +117,26 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# If you have large numbers of uploaded images, you can offload media to Cloudinary.
+# Set CLOUDINARY_URL in the environment (example: cloudinary://API_KEY:API_SECRET@CLOUD_NAME)
+if ENV is not None:
+    CLOUDINARY_URL = ENV.str('CLOUDINARY_URL', default=None)
+else:
+    CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+
+if CLOUDINARY_URL:
+    # add required apps if not already present
+    try:
+        INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+    except Exception:
+        pass
+
+    # Use Cloudinary for media storage
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # Optional: you can set a custom media URL, but Cloudinary will serve remote URLs
+    MEDIA_URL = '/media/'
+
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # (Production security flags like SECURE_SSL_REDIRECT, HSTS, cookies etc.)
